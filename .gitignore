@@ -1,0 +1,7 @@
+bdd_*.csv
+__pycache__/
+.ipynb_checkpoints/
+slprj/
+*.slxc
+*.asv
+.DS_Store
