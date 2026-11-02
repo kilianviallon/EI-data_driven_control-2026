@@ -1,0 +1,28 @@
+# EI Data-Driven Control - Track B (RL)
+# Install: python -m venv .venv  then  .venv\Scripts\pip install -r requirements.txt
+
+# Calcul scientifique & données
+numpy
+scipy
+pandas
+matplotlib
+
+# Identification (réseau de neurones, régression linéaire, normalisation)
+torch
+lightning
+scikit-learn
+
+# Commande classique (baselines PID / LQ, discrétisation, réponses indicielles)
+control
+
+# Reinforcement learning (+ tensorboard, tqdm, rich pour suivre l'entraînement)
+gymnasium
+stable-baselines3[extra]
+
+# Import d'un modèle identifié dans MATLAB (export ONNX)
+onnx
+onnxruntime
+
+# Notebooks
+jupyter
+ipykernel
