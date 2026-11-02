@@ -1,0 +1,45 @@
+{
+  "version": "version_0",
+  "date": "2026-11-02 10:52",
+  "data": {
+    "csv_u": "../data_base_cleaning/bdd_in_clean.csv.gz",
+    "csv_y": "../data_base_cleaning/bdd_out_clean.csv.gz",
+    "source": "bdd_in_mat_05.csv / bdd_out_mat_05.csv (cleaned)",
+    "Te": 0.05,
+    "n_sequences": 2996,
+    "n_samples": 2000,
+    "split": [
+      0.7,
+      0.15,
+      0.15
+    ]
+  },
+  "normalization": {
+    "u_scale": 1.0,
+    "y_offset": -9.81,
+    "y_scale": 20.0
+  },
+  "model": {
+    "rnn_type": "RNN",
+    "hidden_size": 16,
+    "num_layers": 1,
+    "dropout": 0.0,
+    "lr": 0.003,
+    "weight_decay": 0.0,
+    "input_size": 1,
+    "output_size": 1
+  },
+  "training": {
+    "epoch_max": 30,
+    "nb_train": 1,
+    "patience_EarlyStopping": 10,
+    "refresh_rate_brogress_bar": 10,
+    "batch_size": 32,
+    "best_epoch": 30,
+    "epochs_run": 30,
+    "best_val_loss": 0.00014307413948699832,
+    "train_time_s": 206.5,
+    "test_loss_last_epoch": 0.0001427923998562619
+  },
+  "checkpoint": "C:/Users/nicol/Documents/Document Nicolas/Centrale/S7/DataDrivenControl/EI/Student_folder (1)/EI-data_driven_control-2026/identification_RNN/model_rnn/lightning_logs/version_0/model-epoch=29-val_loss=1.43e-04.ckpt"
+}
