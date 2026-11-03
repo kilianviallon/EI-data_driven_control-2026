@@ -1,0 +1,5 @@
+Méthode :
+- détermination du modèle 
+    - choix du type du modèle 
+    - entrainement 
+- 
