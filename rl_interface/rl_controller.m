@@ -29,22 +29,18 @@ u = x(1);
 end
 
 function obs = observation(m)
-% The observation: the same computation as in your Python environment, in the same order.
-%   m: struct of scalars t, z, vz, az_prev, z_ref, u_prev (the measurements of the drone).
-%   obs: vector, e.g. obs = [m.z; m.vz];
-% A memory (an integral of the error, past commands...) goes in persistent variables: they are
-% reset by "clear rl_controller", at the start of each flight.
+% Même calcul que _observation dans Env_drone.py, dans le même ordre.
 erreur = m.z_ref - m.z;
 obs = [erreur; m.vz; m.az_prev / 10; m.u_prev];
 end
 
 function z_ref = mission(t)
-% The reference altitude at time t [s], the same as in your Python environment: the steps of
-% Figure 1 (0 m on the platform, 0.5 m, -0.25 m on the ground), within the 10 s of the flight.
+% Même consigne que mission dans Env_drone.py.
 if t < 3.0
     z_ref = 0.0;
 elseif t < 7.0
     z_ref = 0.5;
 else
     z_ref = -0.25;
-end
+end   % ferme le if
+end   % ferme la fonction
