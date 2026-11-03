@@ -1,40 +1,10 @@
 import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
+from modele_rnn import ModeleRNN
 
 TS = 0.05        # pas de temps imposé [s]
 N_STEPS = 200    # 10 s de vol
-DOSSIER = "../identification_RNN/model_rnn/lightning_logs/version_0/export_NN"
-
-# Récupérer les paramètres du RNN
-def lire_txt(chemin):
-    with open(chemin) as f:
-        texte = f.read().strip().strip("[]")      # enlève les crochets
-    lignes = texte.split(";")                      # coupe aux ";"
-    return np.array([[float(x) for x in ligne.split()] for ligne in lignes])
-
-# créer une class RNN pour récupérer l'acccélration
-
-class ModeleRNN:
-    # implémenter les paramètres du RNN
-    def __init__(self, dossier):
-        self.Wih = lire_txt(dossier + "/weight_ih_l0.txt").reshape(-1)   # 16 nombres
-        self.Whh = lire_txt(dossier + "/weight_hh_l0.txt")               # matrice 16 x 16
-        self.bh  = lire_txt(dossier + "/bias_h.txt").reshape(-1)         # 16 nombres
-        self.Wo  = lire_txt(dossier + "/head_weight.txt").reshape(-1)    # 16 nombres
-        self.bo  = lire_txt(dossier + "/head_bias.txt")[0, 0]            # 1 nombre
-        self.h = np.zeros(16) 
-                                               
-    # reset la mémoire de l'élement caché
-    def reset(self):
-        self.h = np.zeros(16)          # on vide la mémoire au début de chaque vol
-    # recalculer l'accélération grace au RNN
-    def step(self, u):
-        self.h = np.tanh(self.Wih * u + self.Whh @ self.h + self.bh)    # équation 1
-        return 20 * (self.Wo @ self.h + self.bo) - 9.81  
-        
-
-
 
 
 class DroneEnv(gym.Env):
@@ -46,7 +16,7 @@ class DroneEnv(gym.Env):
         # Observation 
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(4,), dtype=np.float32)
         # Le modèle du drone : le RNN du groupe
-        self.modele = ModeleRNN(DOSSIER)
+        self.modele = ModeleRNN()
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
