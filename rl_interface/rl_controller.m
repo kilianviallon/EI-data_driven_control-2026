@@ -29,9 +29,13 @@ u = x(1);
 end
 
 function obs = observation(m)
-% Même calcul que _observation dans Env_drone.py, dans le même ordre.
+persistent I
+if isempty(I)
+    I = 0;
+end
 erreur = m.z_ref - m.z;
-obs = [erreur; m.vz; m.az_prev / 10; m.u_prev];
+I = min(max(I + erreur * 0.05, -1), 1);
+obs = [erreur; m.vz; m.az_prev / 10; m.u_prev; I];
 end
 
 function z_ref = mission(t)
