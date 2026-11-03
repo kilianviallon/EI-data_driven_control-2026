@@ -10,7 +10,7 @@ Ts = 0.05;
 g_noise = 0.1;              % 0 d'abord, puis 0.1 comme dans EINT_RL_eval.m
 
 %% 2. Chargement du RNN
-d   = fullfile('..', 'model_rnn', 'lightning_logs', 'version_0', 'export_NN');   % poids exportés par RNN_drone.py
+d   = fullfile('..', 'model_rnn', 'lightning_logs', 'version_3', 'export_NN');   % poids exportés par RNN_drone.py
 Wih = str2num(fileread(fullfile(d, 'weight_ih_l0.txt')));    % 16x1
 Whh = str2num(fileread(fullfile(d, 'weight_hh_l0.txt')));    % 16x16
 bh  = str2num(fileread(fullfile(d, 'bias_h.txt')))';         % 16x1
