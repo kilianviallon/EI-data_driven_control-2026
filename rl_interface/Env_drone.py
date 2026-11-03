@@ -5,6 +5,8 @@ from modele_rnn import ModeleRNN
 
 TS = 0.05        # pas de temps imposé [s]
 N_STEPS = 200    # 10 s de vol
+SOL = -0.25      # altitude du sol [m]
+CRASH = -50.0    # récompense du crash, qui arrête le vol
 
 
 class DroneEnv(gym.Env):
@@ -62,10 +64,7 @@ class DroneEnv(gym.Env):
         self.vz = self.vz + az * TS
 
         # 3. Récompense
-        erreur = z_ref - self.z
-        reward = (-abs(erreur)                          # être sur la consigne
-                  - 0.05 * abs(self.vz)                 # ne pas foncer
-                  - 10.0 * max(0.0, -0.25 - self.z))    # ne pas passer sous le sol
+        reward = self._recompense(z_ref, u)
 
         # 4. Mise à jour pour le pas suivant
         self.az_prev = az          # devient "l'accélération du pas précédent"
@@ -74,7 +73,10 @@ class DroneEnv(gym.Env):
         self.t = self.k * TS
 
         # 5. Fin du vol ?
-        terminated = False                 # pas de crash qui arrête le vol
+        crash = abs(z_ref - self.z) > 1.0 or self.z < SOL - 0.1   # trop loin de la consigne ou dans le sol
+        if crash:
+            reward = CRASH
+        terminated = crash                 # le crash arrête le vol
         truncated = self.k >= N_STEPS      # les 10 s sont écoulées
 
         # 6. Ce qu'on renvoie
@@ -83,4 +85,12 @@ class DroneEnv(gym.Env):
         return obs, float(reward), terminated, truncated, {"m": m}
 
 
-
+    # Récompense d'un pas (z, vz : état après le pas ; u_prev : commande du pas précédent)
+    # Positive quand le drone suit : rester en vol rapporte, donc le crash (fin du vol) est évité.
+    def _recompense(self, z_ref, u):
+        erreur = z_ref - self.z
+        return (1.0 - abs(erreur)                         # être sur la consigne
+                + 0.3 * np.exp(-(erreur / 0.03) ** 2)     # bonus de précision (à 3 cm près)
+                - 0.05 * abs(self.vz)                     # ne pas foncer
+                - 0.3 * (u - self.u_prev) ** 2            # commande sans à-coups
+                - 10.0 * max(0.0, SOL - self.z))          # ne pas passer sous le sol
