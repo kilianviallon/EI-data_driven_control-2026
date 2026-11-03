@@ -348,7 +348,7 @@ class EpochLogger(L.Callback):
                         f"{best_rmse:7.3f} m/s² (ep {self.best_epoch:4d}) | {time.time() - self.t0:5.0f} s" + ("  *" if improved else ""))
 
 
-def train_run(data_u, data_y, model_save_name, epoch_max=10, nb_train=1, patience_EarlyStopping=200, refresh_rate_brogress_bar=10, batch_size = 32, model_kwargs=None, y_scale=1.0):
+def train_run(data_u, data_y, model_save_name, epoch_max=10, nb_train=1, patience_EarlyStopping=200, refresh_rate_brogress_bar=10, batch_size = 32, model_kwargs=None, y_scale=1.0, seed=0):
     """
     Train a model multiple times with the given data and save the results.
 
@@ -362,6 +362,7 @@ def train_run(data_u, data_y, model_save_name, epoch_max=10, nb_train=1, patienc
         refresh_rate_brogress_bar (int, optional): Refresh rate for the progress bar. Defaults to 10.
         model_kwargs (dict, optional): Hyperparameters passed to model_nn (rnn_type, hidden_size, ...).
         y_scale (float, optional): Output normalisation scale, to print the validation RMSE in m/s². Defaults to 1.
+        seed (int, optional): Random seed of the first run (run i uses seed + i). Defaults to 0.
 
     Returns:
         list: One dict per training run (best checkpoint, log directory, best val_loss and epoch, training time...).
@@ -369,6 +370,8 @@ def train_run(data_u, data_y, model_save_name, epoch_max=10, nb_train=1, patienc
     runs = []
     for index_train in range(nb_train):
         print("Train ", index_train)
+        L.seed_everything(seed + index_train)       # Different (and reproducible) initial weights and batch order for each run
+
         # Initialize the data module with input and output data
         data_module = dataModule(data_u, data_y, batch_size=batch_size)
 
@@ -419,6 +422,7 @@ def train_run(data_u, data_y, model_save_name, epoch_max=10, nb_train=1, patienc
         print(logger)
         best_path = checkpoint_callback.best_model_path
         runs.append(dict(
+            seed=seed + index_train,                                       # Random seed of this run
             checkpoint=best_path.replace(os.sep, '/'),                    # Best model of this run
             log_dir=logger.log_dir,                                        # model_rnn/lightning_logs/version_N
             best_val_loss=float(checkpoint_callback.best_model_score),
@@ -474,7 +478,8 @@ model_kwargs = dict(
 # Training parameters
 train_kwargs = dict(
     epoch_max=30,                           # Maximum number of training epochs
-    nb_train=1,                             # Number of training runs
+    nb_train=5,                             # Number of training runs (same settings, different initial weights)
+    seed=1,                                 # Seed of the first run (version_0 was trained without a seed)
     patience_EarlyStopping=10,              # Number of epochs to wait before early stopping if no improvement
     refresh_rate_brogress_bar=10,           # Refresh rate for the progress bar (in batches)
     batch_size=32,                          # Number of sequences per batch
@@ -502,15 +507,33 @@ if TRAIN:
                       n_sequences=int(tensor_u.shape[0]), n_samples=int(tensor_u.shape[1]), split=[0.70, 0.15, 0.15]),
             normalization=dict(u_scale=u_scale, y_offset=y_offset, y_scale=y_scale),
             model=dict(model_kwargs, input_size=input_size, output_size=output_size),
-            training=dict(train_kwargs, **{k: run[k] for k in ('best_epoch', 'epochs_run', 'best_val_loss',
+            training=dict(train_kwargs, **{k: run[k] for k in ('seed', 'best_epoch', 'epochs_run', 'best_val_loss',
                                                                  'train_time_s', 'test_loss_last_epoch')}),
             checkpoint=run['checkpoint'],
         )
         with open(os.path.join(run['log_dir'], 'run_info.json'), 'w') as f:
             json.dump(run_info, f, indent=2)
-    model_path = runs[-1]['checkpoint']     # Best checkpoint of the last training run
+
+    # Comparison of all the models trained so far (run_info.json of each version). The best one is chosen
+    # on the validation loss: the test set stays unseen, for the final evaluation below
+    logs_dir = os.path.join(model_save_name, 'lightning_logs')
+    print(f"\n{'version':>10} | {'seed':>4} | {'best epoch':>10} | {'val RMSE':>12}")
+    best_val_loss = float('inf')
+    for version in sorted(os.listdir(logs_dir), key=lambda v: int(v.split('_')[-1])):
+        info_path = os.path.join(logs_dir, version, 'run_info.json')
+        if not os.path.isfile(info_path):
+            continue
+        with open(info_path) as f:
+            training = json.load(f)['training']
+        print(f"{version:>10} | {str(training.get('seed', '-')):>4} | {training['best_epoch']:4d} / {training['epochs_run']:<3d} | "
+              f"{math.sqrt(training['best_val_loss']) * y_scale:7.3f} m/s²")
+        if training['best_val_loss'] < best_val_loss:
+            best_val_loss, best_version = training['best_val_loss'], version
+    ckpt = [f for f in os.listdir(os.path.join(logs_dir, best_version)) if f.endswith('.ckpt')][0]
+    model_path = os.path.join(logs_dir, best_version, ckpt).replace(os.sep, '/')    # Best checkpoint of all the runs
+    print(f"Best model (validation): {best_version}\n")
 else:
-    model_path = 'model_rnn/lightning_logs/version_0/model-epoch=29-val_loss=1.43e-04.ckpt'   # Path to the trained model checkpoint
+    model_path = 'model_rnn/lightning_logs/version_3/model-epoch=24-val_loss=2.04e-05.ckpt'   # Path to the trained model checkpoint (best of 6 runs)
 
 
 # Load the trained model
