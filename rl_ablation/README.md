@@ -55,9 +55,33 @@ Autres figures : [apprentissage](figures/1_apprentissage.png) (RMSE au cours de 
 [commandes](figures/3_commandes.png) (u pendant les vols), [bilan](figures/4_bilan.png) (mission, missions
 aléatoires, bruit + biais).
 
-## Suite : A + C
-A et C donnent les vols les plus lisses. La variante **AC** (action [0 ; 0,8] + intégrale) est entraînée
-comme les autres (100 000 pas), et **AC_200k** deux fois plus longtemps. Résultats à venir.
+## Suite : A + C, pour un vol moins oscillant
+Le vol d'ABCDE oscille. A et C donnant les vols les plus lisses, la variante **AC** (action [0 ; 0,8] +
+intégrale) est entraînée comme les autres (100 000 pas), et **AC_200k** deux fois plus longtemps.
+
+![Comparaison finale de la qualité du vol](figures/presentation/9_comparaison_vols.png)
+
+| Médiane sur 3 graines | ABCDE | AC | AC_200k | PID |
+|---|---|---|---|---|
+| RMSE mission [m] | 0.216 | 0.218 | 0.215 | **0.198** |
+| Erreur en fin de palier [m] | 0.093 | 0.124 | 0.133 | **0.035** |
+| Oscillation : abs(vz) en fin de palier [m/s] | 0.182 | **0.057** | 0.110 | 0.214 |
+| z min [m] (sol à -0,25) | -0.31 | -0.36 | -0.49 | -0.33 |
+| RMSE du modèle final [m] | **0.221** | 0.259 | 0.344 | - |
+| Variation de u par pas | 0.036 | **0.016** | 0.028 | 0.044 |
+
+- **AC** : commande la plus lisse et oscillations 3 fois plus faibles qu'ABCDE (et que le PID). Mais la
+  correction est lente : dépassement jusqu'à 0,64 m sur le palier à 0,5 m, environ 12 cm d'erreur en fin de
+  palier, atterrissage sous le sol. Les graines sont très différentes : la meilleure (graine 0) fait
+  3,3 cm d'erreur en fin de palier, au niveau du PID, sans passer sous le sol.
+- **AC_200k** : entraîner plus longtemps n'aide pas. Les oscillations lentes reviennent (0,11 m/s) et
+  l'apprentissage est moins stable (0,34 m en fin d'entraînement) : sans la récompense B, plus de pas ne fait
+  pas mieux converger.
+- Piste suivante : **A + B + C**. B rend l'apprentissage stable et le vol calme ; on retire D (qui rend la
+  tâche trop difficile) et E (commande « tout ou rien »).
+
+Figures face au départ : [AC](figures/presentation/7_AC_action_integrale.png) ·
+[AC_200k](figures/presentation/8_AC_200k_action_integrale_long.png)
 
 ## Les variantes
 
@@ -92,7 +116,7 @@ comme les autres (100 000 pas), et **AC_200k** deux fois plus longtemps. Résult
 |---|---|
 | `drone_env_ablation.py` | Environnement : `Env_drone.py` + les améliorations activables (`VARIANTES`) |
 | `train_variant.py` | Un entraînement : `python train_variant.py <variante> <graine> [pas]` |
-| `run_all.py` | Tous les entraînements, 7 en parallèle, puis l'analyse : `python run_all.py [parallèles] [pas]` (un entraînement déjà terminé n'est pas relancé) |
+| `run_all.py` | Tous les entraînements (7 variantes x 3 graines, puis AC et AC_200k), 7 en parallèle, puis l'analyse : `python run_all.py [parallèles] [pas]` (un entraînement déjà terminé n'est pas relancé) |
 | `analyse.py` | Figures (`figures/`, `figures/presentation/`) et tableau des résultats (`resultats.md`) |
 | `runs/<variante>_s<graine>/` | Un entraînement : évaluations, meilleur modèle et modèle final (`.zip` SB3), vol, export MATLAB (`policy.mat`, `traj_model.mat`) |
 
