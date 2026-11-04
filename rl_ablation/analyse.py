@@ -240,26 +240,30 @@ CHANGEMENT = {
     'D':     "Entraînement sur des missions aléatoires, avec bruit de mesure et biais sur az (écart modèle / drone).",
     'E':     "Coefficient d'entropie de SAC fixé à 0,02 au lieu du réglage automatique (moins d'exploration aléatoire).",
     'ABCDE': "A + B + C + D + E dans le même entraînement.",
+    'AC':      "A + C seulement : action [0 ; 0,8] et intégrale de l'erreur, 100 000 pas comme les autres variantes.",
+    'AC_200k': "A + C seulement, entraînée deux fois plus longtemps (200 000 pas).",
 }
 NOMS_FICHIERS = {'A': '1_A_action', 'B': '2_B_recompense', 'C': '3_C_integrale', 'D': '4_D_robustesse',
-                 'E': '5_E_entropie', 'ABCDE': '6_ABCDE_toutes'}
+                 'E': '5_E_entropie', 'ABCDE': '6_ABCDE_toutes', 'AC': '7_AC_action_integrale',
+                 'AC_200k': '8_AC_200k_action_integrale_long'}
 METRIQUES = [('rmse', 'RMSE sur la mission [m]'), ('erreur_statique', 'Erreur en fin de palier [m]'),
-             ('vitesse_residuelle', 'Oscillation : |vz| en fin de palier [m/s]'),
+             ('vitesse_residuelle', 'Oscillation en fin de palier [m/s]'),
              ('rmse_missions_aleatoires', 'RMSE missions aléatoires [m]'),
              ('rmse_modele_final', 'RMSE du modèle final [m]'), ('variation_u', 'Variation de u par pas')]
 dossier_pres = os.path.join(HERE, 'figures', 'presentation')
 os.makedirs(dossier_pres, exist_ok=True)
 
-for v in AMELIORATIONS:
+for v in AMELIORATIONS + ['AC', 'AC_200k']:
     if v not in runs or 'base' not in runs:
         continue
     final = v == 'ABCDE'
     fig = plt.figure(figsize=(13.33, 7.5), facecolor=FOND)
-    gs = fig.add_gridspec(2, 2, width_ratios=[1.55, 1], height_ratios=[1.7, 1], hspace=0.38, wspace=0.18,
+    gs = fig.add_gridspec(2, 2, width_ratios=[1.55, 1], height_ratios=[1.35, 1.25], hspace=0.38, wspace=0.18,
                           left=0.06, right=0.98, top=0.84, bottom=0.08)
     ax_z, ax_u = fig.add_subplot(gs[0, 0]), fig.add_subplot(gs[1, 0])
     ax_a, ax_t = fig.add_subplot(gs[0, 1]), fig.add_subplot(gs[1, 1])
-    titre = 'Toutes les améliorations' if final else f'Amélioration {v} : {DESCRIPTION[v]}'
+    titre = ('Toutes les améliorations' if final else f'Amélioration {v} : {DESCRIPTION[v]}' if len(v) == 1
+             else f'{v} : {DESCRIPTION[v]}')
     fig.text(0.06, 0.94, titre, fontsize=17, color=ENCRE, weight='bold')
     fig.text(0.06, 0.895, CHANGEMENT[v], fontsize=11, color=ENCRE_2)
 
@@ -310,9 +314,9 @@ for v in AMELIORATIONS:
              + ([f"{pid[cle]:.3f}" if cle in pid else '-'] if final else []) for cle, nom in METRIQUES]
     ax_t.axis('off')
     table = ax_t.table(cellText=texte, colLabels=[''] + colonnes, cellLoc='center', bbox=[0, 0, 1, 1],
-                       colWidths=[0.44, 0.21, 0.21, 0.14] if final else [0.44, 0.28, 0.28])
+                       colWidths=[0.46, 0.20, 0.20, 0.14] if final else [0.46, 0.27, 0.27])
     table.auto_set_font_size(False)
-    table.set_fontsize(9)
+    table.set_fontsize(8.5)
     for (r, c), cell in table.get_celld().items():
         cell.set_edgecolor(GRILLE)
         cell.set_facecolor(FOND)
@@ -328,6 +332,70 @@ for v in AMELIORATIONS:
     ax_t.set_title('Chiffres clés : médiane (min - max), plus bas = mieux', loc='left', fontsize=11, color=ENCRE)
 
     fig.savefig(os.path.join(dossier_pres, NOMS_FICHIERS[v] + '.png'), dpi=150, facecolor=FOND)
+    plt.close(fig)
+
+
+# --- Figure finale : qualité du vol des meilleurs candidats (toutes les améliorations, A + C) et du PID ---
+candidats = [(w, c) for w, c in (('ABCDE', ORANGE), ('AC', BLEU), ('AC_200k', '#1baf7a')) if w in runs]
+if len(candidats) > 1:
+    fig = plt.figure(figsize=(13.33, 7.5), facecolor=FOND)
+    gs = fig.add_gridspec(2, 2, width_ratios=[1.55, 1], height_ratios=[1.35, 1.25], hspace=0.38, wspace=0.18,
+                          left=0.06, right=0.98, top=0.84, bottom=0.08)
+    ax_z, ax_u = fig.add_subplot(gs[0, 0]), fig.add_subplot(gs[1, 0])
+    ax_zoom, ax_t = fig.add_subplot(gs[0, 1]), fig.add_subplot(gs[1, 1])
+    fig.text(0.06, 0.94, 'Comparaison finale : qualité du vol', fontsize=17, color=ENCRE, weight='bold')
+    fig.text(0.06, 0.895, "Meilleur modèle de la graine médiane, mission de la Figure 1 simulée sur le RNN.",
+             fontsize=11, color=ENCRE_2)
+    for ax in (ax_z, ax_zoom):
+        ax.plot(vol_pid['t'], vol_pid['z_ref'], color=ENCRE, linestyle='--', linewidth=1.3, label='consigne')
+        ax.plot(vol_pid['t'], vol_pid['z'], color=ENCRE_2, linestyle=':', linewidth=1.4, label=f"PID (RMSE {pid['rmse']:.2f} m)")
+    ax_z.axhline(-0.25, color=AXE, linestyle=':', linewidth=1.2)
+    ax_z.annotate('sol', (2.0, -0.25), xytext=(0, 3), textcoords='offset points', ha='center', fontsize=8, color=ENCRE_2)
+    ax_u.step(vol_pid['t'], vol_pid['u'], where='post', color=ENCRE_2, linestyle=':', linewidth=1.2)
+    for w, c in candidats:
+        vol = median_run[w]['vol']
+        for ax in (ax_z, ax_zoom):
+            ax.plot(vol['t'], vol['z'], color=c, linewidth=2.2, label=f"{w} (RMSE {median_run[w]['rmse']:.2f} m)")
+        ax_u.step(vol['t'], vol['u'], where='post', color=c, linewidth=1.8)
+    ax_z.set_title('Vol sur la mission', loc='left', fontsize=11, color=ENCRE)
+    ax_z.set_ylabel('z [m]')
+    ax_z.legend(frameon=False, fontsize=9, loc='upper right')
+    ax_zoom.set_xlim(3.5, 7.0)
+    ax_zoom.set_ylim(0.3, 0.7)
+    ax_zoom.set_title('Zoom sur le palier à 0,5 m (oscillations)', loc='left', fontsize=11, color=ENCRE)
+    ax_zoom.set_xlabel('t [s]')
+    ax_u.set_title('Commande envoyée aux moteurs', loc='left', fontsize=11, color=ENCRE)
+    ax_u.set_ylabel('u [-]')
+    ax_u.set_xlabel('t [s]')
+    for ax in (ax_z, ax_u, ax_zoom):
+        habiller(ax)
+
+    # Chiffres clés : médiane sur les graines (PID : un seul vol), le meilleur de chaque ligne en gras
+    noms = [w for w, _ in candidats] + ['PID']
+    valeurs = [[np.median([m[cle] for m in runs[w]]) for w, _ in candidats] + [pid.get(cle, np.nan)]
+               for cle, _ in METRIQUES]
+    texte = [[nom] + [f'{x:.3f}' if not np.isnan(x) else '-' for x in ligne] for (_, nom), ligne in zip(METRIQUES, valeurs)]
+    ax_t.axis('off')
+    largeur = 0.56 / len(noms)
+    table = ax_t.table(cellText=texte, colLabels=[''] + noms, cellLoc='center', bbox=[0, 0, 1, 1],
+                       colWidths=[0.44] + [largeur] * len(noms))
+    table.auto_set_font_size(False)
+    table.set_fontsize(9)
+    couleurs_entete = [c for _, c in candidats] + [ENCRE_2]
+    for (r, c), cell in table.get_celld().items():
+        cell.set_edgecolor(GRILLE)
+        cell.set_facecolor(FOND)
+        if c == 0:
+            cell.set_text_props(ha='left', color=ENCRE)
+            cell.PAD = 0.03
+        elif r == 0:
+            cell.set_text_props(weight='bold', color=couleurs_entete[c - 1])
+        elif np.nanargmin(valeurs[r - 1]) == c - 1:
+            cell.set_text_props(weight='bold', color=ENCRE)
+        else:
+            cell.set_text_props(color=ENCRE_2)
+    ax_t.set_title('Chiffres clés : médiane sur les graines, plus bas = mieux', loc='left', fontsize=11, color=ENCRE)
+    fig.savefig(os.path.join(dossier_pres, '9_comparaison_vols.png'), dpi=150, facecolor=FOND)
     plt.close(fig)
 
 
