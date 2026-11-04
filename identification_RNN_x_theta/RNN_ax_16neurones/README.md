@@ -18,7 +18,8 @@ Résultats du modèle retenu (écart-type de ax : 1,76 m/s²) :
 - test MATLAB face au simulateur (`boucle_tangage.slx`, signal de 20 s jamais vu) : RMSE = 0,560 m/s².
 
 Modèle moyen : ax dépend de theta, la double intégrale de a_theta, que 16 neurones reconstruisent mal à partir
-de u_theta seul (les 3 graines butent au même niveau). Une version à 32 neurones est en cours.
+de u_theta seul (les 3 graines butent au même niveau). **Utiliser plutôt la version à 32 neurones**
+([`../RNN_ax_32neurones`](../RNN_ax_32neurones) : RMSE 0,661 m/s² en test, 0,361 m/s² face au simulateur).
 
 ## Utiliser les poids
 RNN simple (tanh), 1 couche, 16 neurones. Pas à pas, h0 = 0 :
