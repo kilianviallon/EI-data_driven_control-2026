@@ -7,6 +7,7 @@ puis exporté vers MATLAB et testé sur `UAV_model.slx`.
 |---|---|
 | `modele_rnn.py` | Modèle RNN u → az (`version_3`), lu depuis les poids `export_NN/` |
 | `Env_drone.py` | Environnement Gymnasium : mission, observation, récompense, crash |
+| `modele_lacet.py`, `Env_drone_lacet.py` | Tâche avancée : modèle du lacet et environnement avec un tour sur soi-même (voir [`../identification_lacet`](../identification_lacet)) |
 | `track_b.ipynb` | Entraînement PPO et export (`policy.mat`, `traj_model.mat`) |
 | `rl_controller.m`, `EINT_RL_eval.m`, `EINT_RL_closed_loop.slx` | Policy sous MATLAB et vol sur le simulateur |
 | `policy.mat`, `traj_model.mat`, `ppo_drone.zip` | Policy entraînée (export MATLAB, trajectoire sur le modèle, agent SB3) |
