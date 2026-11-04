@@ -1,0 +1,14 @@
+{
+ "variante": "E",
+ "graine": 2,
+ "n_pas": 100000,
+ "duree_min": 11.73,
+ "pas_meilleur": 95000,
+ "rmse": 0.2155790711885899,
+ "rmse_modele_final": 0.28919956242099215,
+ "erreur_statique": 0.015494260651467811,
+ "z_min": -0.23607891293779396,
+ "variation_u": 1.0648101059036639,
+ "rmse_missions_aleatoires": 0.1614392354901182,
+ "rmse_bruit": 0.2182624811001249
+}

@@ -1,0 +1,2 @@
+policy.mat and traj_model.mat written (200 steps): now run EINT_RL_eval in MATLAB.
+{"variante": "B", "graine": 0, "n_pas": 100000, "duree_min": 17.13, "pas_meilleur": 95000, "rmse": 0.40518071759650476, "rmse_modele_final": 0.4081842182824477, "erreur_statique": 0.35678707442813135, "z_min": -0.1382016097936796, "variation_u": 0.11958959054707283, "rmse_missions_aleatoires": 0.39817803937575735, "rmse_bruit": 0.4112097158996885}

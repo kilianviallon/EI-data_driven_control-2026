@@ -1,0 +1,46 @@
+{
+  "version": "version_1",
+  "date": "2026-11-04 09:51",
+  "data": {
+    "csv_u": "../generation_donnees_x_theta/bdd_in_utheta.csv.gz",
+    "csv_y": "../generation_donnees_x_theta/bdd_out_ax.csv.gz",
+    "source": "generation_donnees_x_theta/generer_bdd_x_theta.m (UAV_model.slx, pitch loop)",
+    "Te": 0.05,
+    "n_sequences": 3000,
+    "n_samples": 2000,
+    "split": [
+      0.7,
+      0.15,
+      0.15
+    ]
+  },
+  "normalization": {
+    "u_scale": 0.02,
+    "y_offset": 0.0,
+    "y_scale": 4.5
+  },
+  "model": {
+    "rnn_type": "RNN",
+    "hidden_size": 16,
+    "num_layers": 1,
+    "dropout": 0.0,
+    "lr": 0.003,
+    "weight_decay": 0.0,
+    "input_size": 1,
+    "output_size": 1
+  },
+  "training": {
+    "epoch_max": 30,
+    "nb_train": 3,
+    "seed": 2,
+    "patience_EarlyStopping": 10,
+    "refresh_rate_brogress_bar": 10,
+    "batch_size": 32,
+    "best_epoch": 30,
+    "epochs_run": 30,
+    "best_val_loss": 0.035534609109163284,
+    "train_time_s": 216.5,
+    "test_loss_last_epoch": 0.0354161374270916
+  },
+  "checkpoint": "C:/Users/nicol/Documents/Document Nicolas/Centrale/S7/DataDrivenControl/EI/Student_folder (1)/EI-data_driven_control-2026/identification_RNN_x_theta/RNN_ax_16neurones/lightning_logs/version_1/model-epoch=29-val_loss=3.55e-02.ckpt"
+}
