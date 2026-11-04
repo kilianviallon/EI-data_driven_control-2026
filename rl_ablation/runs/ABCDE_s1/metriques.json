@@ -1,0 +1,14 @@
+{
+ "variante": "ABCDE",
+ "graine": 1,
+ "n_pas": 100000,
+ "duree_min": 11.12,
+ "pas_meilleur": 45000,
+ "rmse": 0.21562202341185918,
+ "rmse_modele_final": 0.24616276830590683,
+ "erreur_statique": 0.09696732800397959,
+ "z_min": -0.31381538454536656,
+ "variation_u": 0.03628289031248596,
+ "rmse_missions_aleatoires": 0.1983082808069731,
+ "rmse_bruit": 0.21934945154270213
+}
